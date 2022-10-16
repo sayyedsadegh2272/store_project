@@ -1,0 +1,17 @@
+POST http://localhost:5000/user/get-otp
+Content-Type: application/json
+
+{
+    "mobile" : "09174200922"
+}
+
+
+POST http://localhost:5000/user/login
+Content-Type: application/json
+
+{
+    "mobile" : "09174200922"
+}
+
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtb2JpbGUiOiIwOTE3NDIwMDkyMiIsImlhdCI6MTY2MjcyNTUxMSwiZXhwIjoxNjYyNzI5MTExfQ.rtTCAQvz6IbHrXHPDbcEmXxbzNElCXZe10oouVSB9MY

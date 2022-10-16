@@ -1,0 +1,24 @@
+{
+    products{
+        _id
+        title
+        imageURL
+        short_text
+        text
+        tags
+        supplier { 
+            first_name
+            last_name
+        }
+        category {
+            title
+            _id
+        }
+        features {
+            hight
+            width
+            colors
+            length
+        }
+    }
+}
