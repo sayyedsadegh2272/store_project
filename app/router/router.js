@@ -9,14 +9,15 @@ const { UserAuthRoutes } = require("./user/auth");
 const { VerifyAccessToken } = require("../http/middlewares/verifyAccessToken");
 const { graphqlHTTP } = require("express-graphql");
 const { graphQlConfig } = require("../utils/graphql.config");
+const { SupportSectionRouter } = require("./support/support.router");
 
 
-(async () =>{
-    await redisClient.connect();
-    await redisClient.set('key', 'value');
-    const value = await redisClient.get('key');
-    console.log(value);
-})()
+// (async () =>{
+//     await redisClient.connect();
+//     await redisClient.set('key', 'value');
+//     const value = await redisClient.get('key');
+//     console.log(value);
+// })()
 
 const router = require("express").Router();
 router.use("/user" , UserAuthRoutes)
@@ -25,6 +26,7 @@ router.use("/developer" , DeveloperRoutes)
 router.use("/blogs" , blogApiPrisma)
 router.use("/category" , CategoryApiPrisma)
 router.use("/graphql" , graphqlHTTP(graphQlConfig))
+router.use("/support" , SupportSectionRouter)
 router.use("/" , HomeRoutes)
 
 

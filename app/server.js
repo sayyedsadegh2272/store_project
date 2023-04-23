@@ -1,6 +1,6 @@
 const express = require ("express");
 const morgan = require ("morgan");
-const { createServer } = require("http");
+const ExpressEjsLayouts = require("express-ejs-layouts")
 require("dotenv").config();
 const mongoose = require ("mongoose");
 const path = require("path");
@@ -8,7 +8,13 @@ const createError = require("http-errors");
 const swaggerUI = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
 const cors = require("cors")
+const session = require("express-session")
+const cookieParser = require("cookie-parser")
 const { AllRoutes } = require("./router/router");
+const { initialSocket } = require("./utils/initSocket");
+const { socketHandler } = require("./socket.io");
+const { clientHelper } = require("./utils/client");
+const { COOKIE_PARSER_SECRET_KEY } = require("./utils/constans");
 
 module.exports = class Application {
     #app = express()
@@ -18,7 +24,8 @@ module.exports = class Application {
         this.#PORT = PORT;
         this.#DB_URL = DB_URL;
         this.configApplication();
-        this.initRedis();
+        this.initTemplateEngine();
+        // this.initRedis();
         this.connectToMongoDB();
         this.createServer();
         this.createRoutes();
@@ -76,7 +83,10 @@ module.exports = class Application {
     }
     createServer(){
         const http = require("http");
-        http.createServer(this.#app).listen(this.#PORT , ()=>{
+        const server = http.createServer(this.#app)
+        const io = initialSocket(server)
+        socketHandler(io)
+        server.listen(this.#PORT , ()=>{
             console.log("run => http://localhost:" + this.#PORT);
         })
     }
@@ -103,8 +113,46 @@ module.exports = class Application {
             //this The process.exit() method instructs Node.js to terminate the process synchronously with an exit status of code
         }) 
     }
-    initRedis(){
-        require("./utils/init_redis")
+    // initRedis(){
+    //     require("./utils/init_redis")
+    // }
+    initTemplateEngine(){
+      this.#app.use(ExpressEjsLayouts)
+      this.#app.set("view engine" , "ejs")
+      this.#app.set("views" , "resource/views")
+      this.#app.set("layout extractStyles", true);
+      // for read css file 
+      this.#app.set("layout extractScripts", true);
+      // for read script file
+      this.#app.set("layout", "./layouts/master");
+      this.#app.use((req , res , next) => {
+        this.#app.locals = clientHelper(req , res);
+        next()
+      })
+         /*
+        فرض کن در داخل پیام رسان ، یه کاربر می یاد و یه پیام ارسال می کنه 
+        ما می خواییم اگه خود کاربر باشه سمت چپ بیاد پیامش 
+        و اگه بقیه کاربر ها باشه سمت راست 
+        پس باید اطلاعات اون کاربری که الان داره پیام ارسال می کنه رو داشته باشم 
+        این کلاینت هلپر دقیقا کارش همینه 
+      */
+    }
+    initClientSession(){
+      this.#app.use(cookieParser(COOKIE_PARSER_SECRET_KEY))
+      this.#app.use(session({
+        secret : COOKIE_PARSER_SECRET_KEY,
+        resave : true ,
+        saveUninitialized : true ,
+        cookie : {
+          secure : true
+        }
+      }))
+      /*
+        برای اینکه بتونیم در سمت فرانت بدون کوئری زدن به دیتابیس
+        توکن ذخیره کنیم و بررسی کنیم کاربر رو 
+        می یاییم و از این قابلیت استفاده می کنیم
+        و برای کانفیگ اون موارد بالا رو رعایت می کنیم
+      */
     }
     createRoutes(){
         this.#app.use(AllRoutes)
